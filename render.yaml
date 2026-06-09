@@ -20,4 +20,3 @@ databases:
   - name: futbol-db
     plan: free
     databaseName: futbol_db
-    user: postgres
