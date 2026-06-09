@@ -11,8 +11,6 @@ jobs:
     name: Suite de Pruebas (Jest + Supertest)
     runs-on: ubuntu-latest
 
-    # Servicio temporal de PostgreSQL para la duración del job
-    # En GitHub Actions los servicios son accesibles desde el runner en 'localhost'
     services:
       postgres:
         image: postgres:15-alpine
@@ -22,7 +20,6 @@ jobs:
           POSTGRES_DB: futbol_db
         ports:
           - 5432:5432
-        # Health check: GitHub Actions espera a que Postgres esté listo
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -30,24 +27,20 @@ jobs:
           --health-retries 5
 
     env:
-      # En Actions el runner se conecta al servicio Postgres vía localhost (no por nombre de servicio)
       DATABASE_URL: postgresql://postgres:password123@localhost:5432/futbol_db
-      # ✅ FIX ERROR 2: Se inyecta NODE_ENV=test para que las pruebas
-      # reconozcan el entorno correcto en el pipeline de CI.
       NODE_ENV: test
 
     steps:
-      - name: 📥 Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
-      - name: ⚙️ Configurar Node.js 24
+      - name: Configurar Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
 
-      - name: 📦 Instalar dependencias
+      - name: Instalar dependencias
         run: npm install
 
-      - name: 🧪 Correr suite de pruebas
+      - name: Correr suite de pruebas
         run: npm test
