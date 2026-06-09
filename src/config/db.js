@@ -1,9 +1,10 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// ❌ ERROR 1 (INFRAESTRUCTURA): El string de conexión usa 'localhost' en lugar del nombre 
-// del servicio de Docker ('db_futbol'). Esto hará que falle DENTRO del contenedor del backend.
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password123@localhost:5432/futbol_db';
+// ✅ FIX ERROR 1: El fallback ahora usa el nombre del servicio Docker ('db_futbol')
+// para que funcione correctamente dentro de la red interna de contenedores.
+// En CI y Render, siempre se inyecta DATABASE_URL desde el entorno.
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password123@db_futbol:5432/futbol_db';
 
 const pool = new Pool({
   connectionString,

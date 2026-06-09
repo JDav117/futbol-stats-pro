@@ -6,11 +6,13 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      # ❌ ERROR 5 (RED INTERNA): Apunta a localhost dentro de la red del contenedor. 
-      # Deben cambiarlo a postgresql://postgres:password123@db_futbol:5432/futbol_db
-      - DATABASE_URL=postgresql://postgres:password123@localhost:5432/futbol_db 
+      # ✅ FIX ERROR 5: La URL ahora usa 'db_futbol' (nombre del servicio en esta
+      # red de Compose) en vez de 'localhost'. Dentro de un contenedor, 'localhost'
+      # apunta al contenedor mismo, no al servicio de Postgres.
+      - DATABASE_URL=postgresql://postgres:password123@db_futbol:5432/futbol_db
     depends_on:
-      - db_futbol
+      db_futbol:
+        condition: service_healthy
 
   db_futbol:
     image: postgres:15-alpine
@@ -22,11 +24,16 @@ services:
       POSTGRES_DB: futbol_db
     ports:
       - "5432:5432"
+    # Health check para que el backend espere a que Postgres esté listo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      # ❌ ERROR 6 (VOLÚMENES): Mapeo incorrecto de la ruta interna de Postgres. 
-      # Pusieron /data/db (que es de MongoDB). Postgres arrojará un error de inicialización en los logs 
-      # porque espera la ruta /var/lib/postgresql/data.
-      - postgres_data:/data/db
+      # ✅ FIX ERROR 6: Ruta corregida a /var/lib/postgresql/data, que es donde
+      # Postgres almacena sus datos. /data/db es la ruta de MongoDB.
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:
